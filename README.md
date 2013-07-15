@@ -1,6 +1,7 @@
 libpebble
 =========
 Interact with your Pebble from OSX, Ubuntu or Debian operating systems.
+Added support to control Amarok music player
 
 ## Warning and Complications
 
@@ -102,6 +103,7 @@ Functionality
 
 The following are currently supported:
 
+* Remotely controlling Amarok (KDE-based music player - http://amarok.kde.org/)
 * Sending email, sms and ping notifications
 * Installing, reinstalling and uninstalling applications
 * Installing firmwares

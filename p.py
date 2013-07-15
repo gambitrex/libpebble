@@ -24,6 +24,49 @@ def cmd_load_fw(pebble, args):
 def cmd_launch_app(pebble, args):
     pebble.launcher_message(args.app_uuid, "RUNNING")
 
+def cmd_amarok(pebble, args):
+    bus="qdbus org.kde.amarok /Player "
+    def split_metadata(data, metadata_type):
+	length = len(metadata_type) + 2 #add two more due to <type>:[space] string format
+	return data[data.find(metadata_type) + length : data.find(metadata_type) + length + data[data.find(metadata_type) + length:].find("\n")]
+    
+    def do_command(command):
+        try:
+       		return subprocess.check_output(command, shell=True)
+        except subprocess.CalledProcessError:
+            print "Failed to send message to Amarok, is it running?"
+            return False
+
+    def music_control_handler(endpoint, resp):
+        events = {
+            "PLAYPAUSE": "PlayPause",
+            "PREVIOUS": "Prev",
+            "NEXT": "Next"
+        }
+        do_command(bus + events[resp])
+        update_metadata()
+
+    def update_metadata():
+	metadata = do_command(bus + "GetMetadata")
+	artist = split_metadata(metadata, "artist")
+	title = split_metadata(metadata, "title")
+	album = split_metadata(metadata, "album")
+
+        if not artist or not title or not album:
+            pebble.set_nowplaying_metadata("No Music Found", "", "")
+        else:
+            pebble.set_nowplaying_metadata(title, album, artist)
+
+    pebble.register_endpoint("MUSIC_CONTROL", music_control_handler)
+
+    print 'waiting for music control events'
+    try:
+        while True:
+            update_metadata()
+            time.sleep(5)
+    except KeyboardInterrupt:
+        return
+
 def cmd_remote(pebble, args):
     def do_oscacript(command):
         cmd = "osascript -e 'tell application \""+args.app_name+"\" to "+command+"'"
@@ -205,6 +248,8 @@ def main():
     remote_parser.add_argument('app_name', type=str, help='title of application to be controlled')
     remote_parser.set_defaults(func=cmd_remote)
 
+    amarok_parser = subparsers.add_parser('amarok', help='control Amarok music player on this PC using Pebble')
+    amarok_parser.set_defaults(func=cmd_amarok)
 
     args = parser.parse_args()
 
