@@ -52,9 +52,7 @@ def cmd_amarok(pebble, args):
 	title = split_metadata(metadata, "title")
 	album = split_metadata(metadata, "album")
 
-        if not artist or not title or not album:
-            pebble.set_nowplaying_metadata("No Music Found", "", "")
-        else:
+        if artist and title and album:
             pebble.set_nowplaying_metadata(title, album, artist)
 
     pebble.register_endpoint("MUSIC_CONTROL", music_control_handler)
@@ -63,7 +61,7 @@ def cmd_amarok(pebble, args):
     try:
         while True:
             update_metadata()
-            time.sleep(5)
+            time.sleep(1)
     except KeyboardInterrupt:
         return
 
